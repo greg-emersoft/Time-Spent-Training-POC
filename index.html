@@ -1,0 +1,97 @@
+<html>
+
+<head>
+  <title>Page Visibility Test</title>
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="index.css"
+  >
+  <script src="timeme.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    var player, playerState;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('video', {
+        height: '360',
+        width: '640',
+        videoId: 'qcKzkRrQzTs',
+        events: {
+          'onStateChange': onPlayerStateChange,
+          'onReady': onPlayerReady,
+        }
+      });
+    }
+
+    function onPlayerReady() {
+      console.log("TCL: onPlayerReady -> onPlayerReady")
+      player.playVideo();
+    }
+
+    function onPlayerStateChange(event) {
+      playerState = event.data
+      if (event.data === YT.PlayerState.PLAYING) {
+        TimeMe.startTimer('timer');
+      } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+        TimeMe.stopTimer('timer')
+      }
+    }
+
+    function convertToTimeDisplay(time) {
+      const hours = ('00' + (Math.floor(time / 3600))).slice(-2);
+      const minutes = ('00' + Math.floor(time % 3600 / 60)).slice(-2);
+      const seconds = ('00' + Math.floor(time % 60)).slice(-2);
+      return `${hours}:${minutes}:${seconds}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      TimeMe.initialize();
+
+      document.getElementById('notes').addEventListener('focus', function () {
+        TimeMe.startTimer('timer');
+      })
+
+      document.getElementById('notes').addEventListener('blur', function () {
+        if (playerState === YT.PlayerState.PAUSED) {
+          TimeMe.stopTimer('timer');
+        }
+      })
+
+      window.onbeforeunload = function () {
+        TimeMe.stopTimer('timer');
+      };
+
+      window.onfocus = function () {
+        if (playerState === YT.PlayerState.PLAYING) {
+          TimeMe.startTimer('timer');
+        }
+      };
+
+      setInterval(function () {
+        var timeSpentOnElement = TimeMe.getTimeOnElementInSeconds('timer');
+        document.getElementById('timeInSeconds').textContent = convertToTimeDisplay(timeSpentOnElement);
+      }, 500);
+    });
+  </script>
+</head>
+
+<body>
+  <div class="top-level-message">
+    <h3>Time spent in a Chapter</h3>
+  </div>
+  <div class="time-message">
+    <h1 id="timeInSeconds"></h1>
+  </div>
+  <div class="lesson-wrapper">
+    <textarea
+      id="notes"
+      cols="50"
+      rows="5"
+      placeholder="my notes"
+    ></textarea>
+    <div id="video"></div>
+  </div>
+</body>
+
+</html>
